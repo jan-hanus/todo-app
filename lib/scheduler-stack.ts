@@ -39,6 +39,8 @@ export class TodoSchedulerStack extends Stack {
 
         })
 
+        todoTopic.addSubscription(new SqsSubscription(scheduleSqs))
+
         const notificationDlq = new Queue(this, 'notification-todo-dlq', {
             queueName: 'notification-todo-dlq'
         })
@@ -49,8 +51,6 @@ export class TodoSchedulerStack extends Stack {
                 maxReceiveCount: 3
             },
         })
-
-        todoTopic.addSubscription(new SqsSubscription(scheduleSqs))
 
         const schedulerRole = new Role(this, 'schedulerTodoRole', {
             roleName: "scheduler-todo-role",
@@ -86,27 +86,14 @@ export class TodoSchedulerStack extends Stack {
         scheduleTodoNotification.addEventSource(scheduleFnEventSource)
 
 
-        const notificationTopic = new Topic(this, 'notification-topic', {
-            topicName: "notification-topic"
-        })
-
-        const notificationTopicPublishPolicy: PolicyStatement = new PolicyStatement({
-            actions: ['sns:publish'],
-            resources: ['*']
-        })
-
         const notifyFn = new NodejsFunction(this, 'notifyFn', {
             runtime: Runtime.NODEJS_16_X,
             entry: `${__dirname}/../lambda-fns/notify/index.ts`,
             handler: 'notify',
             tracing: Tracing.ACTIVE,
-            architecture: Architecture.X86_64,
-            environment: {
-                NOTIFICATION_TOPIC_ARN: notificationTopic.topicArn
-            }
+            architecture: Architecture.X86_64
         })
 
-        notifyFn.addToRolePolicy(notificationTopicPublishPolicy)
         notifyFn.addToRolePolicy(scheduleTodoPolicy)
 
         const notifyFnEventSource = new SqsEventSource(notificationSqs)

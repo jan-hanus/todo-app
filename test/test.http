@@ -1,7 +1,7 @@
 
 
 ### Create task
-POST https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task
+POST https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task
 Content-Type: application/json
 
 {
@@ -9,11 +9,11 @@ Content-Type: application/json
   "done": false,
   "owner": "Ales",
   "phone": "+420732286119",
-  "duedate": "2023-08-02T15:27:00"
+  "duedate": "2023-08-02T16:06:00"
 }
 
 ### Create task
-PUT https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task/a24b85ff-738f-4426-850c-0cda932ae8b3
+PUT https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task/a24b85ff-738f-4426-850c-0cda932ae8b3
 Content-Type: application/json
 
 {
@@ -25,13 +25,13 @@ Content-Type: application/json
 }
 
 ### delete task
-DELETE https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task/50507ce3-d65f-4476-87e6-31438c781628
+DELETE https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task/50507ce3-d65f-4476-87e6-31438c781628
 
 ### get all tasks
-GET https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task
+GET https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task
 
 ### get all tasks by owner
-GET https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
+GET https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
 
 ### get one task
-GET https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60
+GET https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60

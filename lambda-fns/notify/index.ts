@@ -29,12 +29,8 @@ export async function notify(event: SQSEvent): Promise<any> {
                 PhoneNumber: event.phone,
                 Message: `Ahoj, nezapomnel(a) jsi na sve TODO: '${event.title}'? Prave vyprsel termin vyrizeni.`
             } as PublishInput))
-
-
         } catch (err) {
-
             console.log(err)
-
             throw err;
         }
 
