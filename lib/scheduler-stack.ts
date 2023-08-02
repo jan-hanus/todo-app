@@ -12,26 +12,27 @@ import {Policy, PolicyStatement, Role, ServicePrincipal} from "aws-cdk-lib/aws-i
 
 interface SchedulerStackProps extends StackProps {
     todoTopic: Topic
+    owner: string
 }
 
 export class TodoSchedulerStack extends Stack {
     constructor(scope: Construct, id: string, props: SchedulerStackProps) {
         super(scope, id, props)
-
+        const owner = props.owner
         const {todoTopic} = props
 
-        const schedulerGroup = new CfnScheduleGroup(this, 'todoSchedules')
+        const schedulerGroup = new CfnScheduleGroup(this, `${owner}-todoSchedules`)
 
         const scheduleTodoPolicy = new PolicyStatement({
             actions: ["scheduler:CreateSchedule", "scheduler:DeleteSchedule", "scheduler:UpdateSchedule"],
             resources: [`*`]
         })
 
-        const scheduleDlq = new Queue(this, 'schedule-todo-dlq', {
-            queueName: 'schedule-todo-dlq'
+        const scheduleDlq = new Queue(this, `${owner}-schedule-todo-dlq`, {
+            queueName: `${owner}-schedule-todo-dlq`
         })
-        const scheduleSqs = new Queue(this, 'schedule-todo-queue', {
-            queueName: 'schedule-todo-queue',
+        const scheduleSqs = new Queue(this, `${owner}-schedule-todo-queue`, {
+            queueName: `${owner}-schedule-todo-queue`,
             deadLetterQueue: {
                 queue: scheduleDlq,
                 maxReceiveCount: 3
@@ -41,19 +42,19 @@ export class TodoSchedulerStack extends Stack {
 
         todoTopic.addSubscription(new SqsSubscription(scheduleSqs))
 
-        const notificationDlq = new Queue(this, 'notification-todo-dlq', {
-            queueName: 'notification-todo-dlq'
+        const notificationDlq = new Queue(this, `${owner}-notification-todo-dlq`, {
+            queueName: `${owner}-notification-todo-dlq`
         })
-        const notificationSqs = new Queue(this, 'notification-todo-queue', {
-            queueName: 'notification-todo-queue',
+        const notificationSqs = new Queue(this, `${owner}-notification-todo-queue`, {
+            queueName: `${owner}-notification-todo-queue`,
             deadLetterQueue: {
                 queue: notificationDlq,
                 maxReceiveCount: 3
             },
         })
 
-        const schedulerRole = new Role(this, 'schedulerTodoRole', {
-            roleName: "scheduler-todo-role",
+        const schedulerRole = new Role(this, `${owner}-schedulerTodoRole`, {
+            roleName: `${owner}-scheduler-todo-role`,
             assumedBy: new ServicePrincipal("scheduler.amazonaws.com")
         })
         schedulerRole.addToPolicy(new PolicyStatement({
@@ -65,7 +66,7 @@ export class TodoSchedulerStack extends Stack {
             resources: [schedulerRole.roleArn]
         })
 
-        const scheduleTodoNotification = new NodejsFunction(this, 'scheduleTodoNotificationFn', {
+        const scheduleTodoNotification = new NodejsFunction(this, `${owner}-scheduleTodoNotificationFn`, {
             runtime: Runtime.NODEJS_16_X,
             entry: `${__dirname}/../lambda-fns/schedule/index.ts`,
             handler: 'schedule',
@@ -78,7 +79,7 @@ export class TodoSchedulerStack extends Stack {
             }
         })
 
-        scheduleTodoNotification.role?.attachInlinePolicy(new Policy(this, 'scheduleTodoPolicy', {
+        scheduleTodoNotification.role?.attachInlinePolicy(new Policy(this, `${owner}-scheduleTodoPolicy`, {
             statements: [scheduleTodoPolicy, scheduleRolePassPolicy]
         }))
 
@@ -86,7 +87,7 @@ export class TodoSchedulerStack extends Stack {
         scheduleTodoNotification.addEventSource(scheduleFnEventSource)
 
 
-        const notifyFn = new NodejsFunction(this, 'notifyFn', {
+        const notifyFn = new NodejsFunction(this, `${owner}-notifyFn`, {
             runtime: Runtime.NODEJS_16_X,
             entry: `${__dirname}/../lambda-fns/notify/index.ts`,
             handler: 'notify',
@@ -95,6 +96,10 @@ export class TodoSchedulerStack extends Stack {
         })
 
         notifyFn.addToRolePolicy(scheduleTodoPolicy)
+        notifyFn.addToRolePolicy(new PolicyStatement({
+            actions: ['SNS:Publish'],
+            resources: ['*']
+        }))
 
         const notifyFnEventSource = new SqsEventSource(notificationSqs)
         notifyFn.addEventSource(notifyFnEventSource)

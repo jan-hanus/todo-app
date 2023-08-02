@@ -10,14 +10,20 @@ import {apiStageName} from "./variables";
 import {PolicyStatement, ServicePrincipal} from "aws-cdk-lib/aws-iam";
 import {Topic} from "aws-cdk-lib/aws-sns";
 
+
+interface DynamodbCrudStackProps extends StackProps {
+  owner: string
+}
 export class DynamodbCrudStack extends Stack {
 
   public readonly todoTopic: Topic
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props: DynamodbCrudStackProps) {
     super(scope, id, props);
 
+    const owner = props.owner
+
     // The code that defines your stack goes here
-    const todoTable = new Table(this, 'todoTable', {
+    const todoTable = new Table(this, `${owner}-todoTable`, {
       partitionKey: {
         name: 'id',
         type: AttributeType.STRING
@@ -38,8 +44,8 @@ export class DynamodbCrudStack extends Stack {
       value: todoTable.tableName
     })
 
-    this.todoTopic = new Topic(this, 'todo-topic', {
-      topicName: "todo-topic"
+    this.todoTopic = new Topic(this, `${owner}-todo-topic`, {
+      topicName: `${owner}-todo-topic`
     })
 
     const topicPublishPolicy: PolicyStatement = new PolicyStatement({
@@ -48,7 +54,7 @@ export class DynamodbCrudStack extends Stack {
     })
 
 
-    const createTodoFn = new NodejsFunction(this, 'createTodoFn', {
+    const createTodoFn = new NodejsFunction(this, `${owner}-createTodoFn`, {
       runtime: Runtime.NODEJS_16_X,
       entry: `${__dirname}/../lambda-fns/create/index.ts`,
       handler: 'createTodo',
@@ -66,7 +72,7 @@ export class DynamodbCrudStack extends Stack {
     todoTable.grantReadWriteData(createTodoFn)
     createTodoFn.addToRolePolicy(topicPublishPolicy)
 
-    const getAllTodoFn = new NodejsFunction(this, 'getAllTodoFn', {
+    const getAllTodoFn = new NodejsFunction(this, `${owner}-getAllTodoFn`, {
       runtime: Runtime.NODEJS_16_X,
       entry: `${__dirname}/../lambda-fns/getAll/index.ts`,
       handler: 'getAll',
@@ -81,7 +87,7 @@ export class DynamodbCrudStack extends Stack {
 
     todoTable.grantReadData(getAllTodoFn)
 
-    const getOneTodoFn = new NodejsFunction(this, 'getOneTodoFn', {
+    const getOneTodoFn = new NodejsFunction(this, `${owner}-getOneTodoFn`, {
       runtime: Runtime.NODEJS_16_X,
       entry: `${__dirname}/../lambda-fns/getOne/index.ts`,
       handler: 'getOne',
@@ -97,7 +103,7 @@ export class DynamodbCrudStack extends Stack {
 
     todoTable.grantReadData(getOneTodoFn)
 
-    const updateTodoFn = new NodejsFunction(this, 'updateTodoFn', {
+    const updateTodoFn = new NodejsFunction(this, `${owner}-updateTodoFn`, {
       runtime: Runtime.NODEJS_16_X,
       entry: `${__dirname}/../lambda-fns/update/index.ts`,
       handler: 'update',
@@ -116,7 +122,7 @@ export class DynamodbCrudStack extends Stack {
 
     todoTable.grantReadWriteData(updateTodoFn)
 
-    const deleteTodoFn = new NodejsFunction(this, 'deleteTodoFn', {
+    const deleteTodoFn = new NodejsFunction(this, `${owner}-deleteTodoFn`, {
       runtime: Runtime.NODEJS_16_X,
       entry: `${__dirname}/../lambda-fns/delete/index.ts`,
       handler: 'deleteTodo',
@@ -134,12 +140,12 @@ export class DynamodbCrudStack extends Stack {
 
     todoTable.grantReadWriteData(deleteTodoFn)
 
-    const tableWithIndex = Table.fromTableAttributes(this, 'tableWithIndex', {
+    const tableWithIndex = Table.fromTableAttributes(this, `${owner}-tableWithIndex`, {
       tableName: todoTable.tableName,
       globalIndexes: ['ownerIndex']
     })
 
-    const openApiAsset = new Asset(this, "todo-open-api", {
+    const openApiAsset = new Asset(this, `${owner}-todo-open-api`, {
       path: path.join(__dirname, './api-definition.yml')
     })
 
@@ -151,9 +157,9 @@ export class DynamodbCrudStack extends Stack {
 
     const apiDefinition: InlineApiDefinition = ApiDefinition.fromInline(data)
 
-    const specRestApi = new SpecRestApi(this, 'todo-api', {
+    const specRestApi = new SpecRestApi(this, `${owner}-todo-api`, {
       apiDefinition: apiDefinition,
-      restApiName: "todo-api",
+      restApiName: `${owner}-todo-api`,
       deployOptions: {
         stageName: apiStageName,
         loggingLevel: MethodLoggingLevel.INFO,

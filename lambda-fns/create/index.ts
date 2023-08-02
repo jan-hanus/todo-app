@@ -3,6 +3,7 @@ import {DynamoDB, PutItemInput} from '@aws-sdk/client-dynamodb'
 import {marshall} from '@aws-sdk/util-dynamodb'
 import {v4 as uuid} from 'uuid'
 import {PublishCommand, PublishInput, SNSClient} from "@aws-sdk/client-sns";
+import {Tracer} from "@aws-lambda-powertools/tracer";
 
 interface TodoInput {
     id?: string
@@ -29,8 +30,16 @@ const dynamoClient = new DynamoDB({
 const snsClient = new SNSClient({
     region: 'us-east-1'
 })
-export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
 
+const tracer = new Tracer();
+export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
+    const segment = tracer.getSegment();
+    const handlerSegment = segment?.addNewSubsegment(`## ${process.env._HANDLER}`);
+    if (handlerSegment) {
+        tracer.setSegment(handlerSegment);
+        tracer.annotateColdStart();
+        tracer.addServiceNameAnnotation();
+    }
     console.debug(`Incoming event: ${event.body}`)
 
     const { body } = event
@@ -41,6 +50,9 @@ export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGate
 
     const { id, owner, title, done, phone, duedate } = JSON.parse(body) as TodoInput
 
+    if (owner) {
+        tracer.putAnnotation('todo.owner', owner)
+    }
     const newTodo: Todo = {
         id: id ?? uuid(),
         owner, title, done, phone, duedate
@@ -52,12 +64,32 @@ export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGate
         TableName: process.env.TODO_TABLE_NAME
     }
     try {
+        let subsegment
+        if (handlerSegment) {
+            subsegment = handlerSegment.addNewSubsegment('dynamodb-put')
+            tracer.setSegment(subsegment)
+        }
         await dynamoClient.putItem(todoParams)
+        if (subsegment) {
+            subsegment.close()
+            subsegment = null
+        }
+        if (handlerSegment) {
+            subsegment = handlerSegment.addNewSubsegment('sns-publish')
+            tracer.setSegment(subsegment)
+        }
         await snsClient.send(new PublishCommand({
             TargetArn: process.env.TODO_TOPIC,
             Subject: "CREATE",
             Message: JSON.stringify(newTodo)
         } as PublishInput))
+        if (subsegment) {
+            subsegment.close()
+        }
+        handlerSegment?.close()
+        if (segment) {
+            tracer.setSegment(segment)
+        }
         return {
             statusCode: 200,
             body: JSON.stringify(newTodo)

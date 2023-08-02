@@ -12,7 +12,8 @@
   "dependencies": {
     "@aws-sdk/client-sns": "^3.382.0",
     "@aws-sdk/client-scheduler": "^3.382.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "@aws-lambda-powertools/tracer": "^1.12.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.75",

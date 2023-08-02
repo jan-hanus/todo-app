@@ -1,19 +1,19 @@
 
 
 ### Create task
-POST https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task
+POST https://bvto8vomr0.execute-api.us-east-1.amazonaws.com/dev/task
 Content-Type: application/json
 
 {
   "title": "Projit finalni pripravu skoleni!!",
   "done": false,
-  "owner": "Ales",
-  "phone": "+420732286119",
-  "duedate": "2023-08-02T16:06:00"
+  "owner": "Honza",
+  "phone": "+420725423491",
+  "duedate": "2023-08-03T00:03:00"
 }
 
 ### Create task
-PUT https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task/a24b85ff-738f-4426-850c-0cda932ae8b3
+PUT https://bvto8vomr0.execute-api.us-east-1.amazonaws.com/dev/task/a24b85ff-738f-4426-850c-0cda932ae8b3
 Content-Type: application/json
 
 {
@@ -25,13 +25,13 @@ Content-Type: application/json
 }
 
 ### delete task
-DELETE https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task/50507ce3-d65f-4476-87e6-31438c781628
+DELETE https://bvto8vomr0.execute-api.us-east-1.amazonaws.com/dev/task/50507ce3-d65f-4476-87e6-31438c781628
 
 ### get all tasks
-GET https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task
+GET https://bvto8vomr0.execute-api.us-east-1.amazonaws.com/dev/task
 
 ### get all tasks by owner
-GET https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
+GET https://bvto8vomr0.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
 
 ### get one task
-GET https://e3l2q70gvi.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60
+GET https://bvto8vomr0.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60
