@@ -72,73 +72,6 @@ export class DynamodbCrudStack extends Stack {
     todoTable.grantReadWriteData(createTodoFn)
     createTodoFn.addToRolePolicy(topicPublishPolicy)
 
-    const getAllTodoFn = new NodejsFunction(this, `${owner}-getAllTodoFn`, {
-      runtime: Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambda-fns/getAll/index.ts`,
-      handler: 'getAll',
-      tracing: Tracing.ACTIVE,
-      architecture: Architecture.X86_64,
-      environment: {
-        TODO_TABLE_NAME: todoTable.tableName
-      }
-    })
-    const getAllCfn = getAllTodoFn.node.defaultChild as CfnFunction;
-    getAllCfn.overrideLogicalId("GetAllLambda")
-
-    todoTable.grantReadData(getAllTodoFn)
-
-    const getOneTodoFn = new NodejsFunction(this, `${owner}-getOneTodoFn`, {
-      runtime: Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambda-fns/getOne/index.ts`,
-      handler: 'getOne',
-      tracing: Tracing.ACTIVE,
-      architecture: Architecture.X86_64,
-      environment: {
-        TODO_TABLE_NAME: todoTable.tableName
-      }
-    })
-
-    const getOneCfn = getOneTodoFn.node.defaultChild as CfnFunction;
-    getOneCfn.overrideLogicalId("GetOneLambda")
-
-    todoTable.grantReadData(getOneTodoFn)
-
-    const updateTodoFn = new NodejsFunction(this, `${owner}-updateTodoFn`, {
-      runtime: Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambda-fns/update/index.ts`,
-      handler: 'update',
-      tracing: Tracing.ACTIVE,
-      architecture: Architecture.X86_64,
-      environment: {
-        TODO_TABLE_NAME: todoTable.tableName,
-        TODO_TOPIC: this.todoTopic.topicArn
-      }
-    })
-
-
-    const updateCfn = updateTodoFn.node.defaultChild as CfnFunction;
-    updateCfn.overrideLogicalId("UpdateLambda")
-    updateTodoFn.addToRolePolicy(topicPublishPolicy)
-
-    todoTable.grantReadWriteData(updateTodoFn)
-
-    const deleteTodoFn = new NodejsFunction(this, `${owner}-deleteTodoFn`, {
-      runtime: Runtime.NODEJS_16_X,
-      entry: `${__dirname}/../lambda-fns/delete/index.ts`,
-      handler: 'deleteTodo',
-      tracing: Tracing.ACTIVE,
-      architecture: Architecture.X86_64,
-      environment: {
-        TODO_TABLE_NAME: todoTable.tableName,
-        TODO_TOPIC: this.todoTopic.topicArn
-      }
-    })
-
-    const deleteCfn = deleteTodoFn.node.defaultChild as CfnFunction;
-    deleteCfn.overrideLogicalId("DeleteLambda")
-    deleteTodoFn.addToRolePolicy(topicPublishPolicy)
-
-    todoTable.grantReadWriteData(deleteTodoFn)
 
     const tableWithIndex = Table.fromTableAttributes(this, `${owner}-tableWithIndex`, {
       tableName: todoTable.tableName,
@@ -174,10 +107,6 @@ export class DynamodbCrudStack extends Stack {
       sourceArn: specRestApi.arnForExecuteApi('*')
     };
     createTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
-    updateTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
-    deleteTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
-    getOneTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
-    getAllTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
 
   }
 }
