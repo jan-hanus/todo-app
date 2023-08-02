@@ -7,9 +7,12 @@ import {Asset} from "aws-cdk-lib/aws-s3-assets";
 import * as path from "path";
 import {ApiDefinition, InlineApiDefinition, MethodLoggingLevel, SpecRestApi} from "aws-cdk-lib/aws-apigateway";
 import {apiStageName} from "./variables";
-import {ServicePrincipal} from "aws-cdk-lib/aws-iam";
+import {PolicyStatement, ServicePrincipal} from "aws-cdk-lib/aws-iam";
+import {Topic} from "aws-cdk-lib/aws-sns";
 
 export class DynamodbCrudStack extends Stack {
+
+  public readonly todoTopic: Topic
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -35,6 +38,16 @@ export class DynamodbCrudStack extends Stack {
       value: todoTable.tableName
     })
 
+    this.todoTopic = new Topic(this, 'todo-topic', {
+      topicName: "todo-topic"
+    })
+
+    const topicPublishPolicy: PolicyStatement = new PolicyStatement({
+      actions: ['sns:publish'],
+      resources: [this.todoTopic.topicArn]
+    })
+
+
     const createTodoFn = new NodejsFunction(this, 'createTodoFn', {
       runtime: Runtime.NODEJS_16_X,
       entry: `${__dirname}/../lambda-fns/create/index.ts`,
@@ -42,7 +55,8 @@ export class DynamodbCrudStack extends Stack {
       tracing: Tracing.ACTIVE,
       architecture: Architecture.X86_64,
       environment: {
-        TODO_TABLE_NAME: todoTable.tableName
+        TODO_TABLE_NAME: todoTable.tableName,
+        TODO_TOPIC: this.todoTopic.topicArn
       }
     })
 
@@ -50,6 +64,7 @@ export class DynamodbCrudStack extends Stack {
     createCfn.overrideLogicalId("CreateLambda")
 
     todoTable.grantReadWriteData(createTodoFn)
+    createTodoFn.addToRolePolicy(topicPublishPolicy)
 
     const getAllTodoFn = new NodejsFunction(this, 'getAllTodoFn', {
       runtime: Runtime.NODEJS_16_X,
@@ -89,12 +104,15 @@ export class DynamodbCrudStack extends Stack {
       tracing: Tracing.ACTIVE,
       architecture: Architecture.X86_64,
       environment: {
-        TODO_TABLE_NAME: todoTable.tableName
+        TODO_TABLE_NAME: todoTable.tableName,
+        TODO_TOPIC: this.todoTopic.topicArn
       }
     })
 
+
     const updateCfn = updateTodoFn.node.defaultChild as CfnFunction;
     updateCfn.overrideLogicalId("UpdateLambda")
+    updateTodoFn.addToRolePolicy(topicPublishPolicy)
 
     todoTable.grantReadWriteData(updateTodoFn)
 
@@ -105,12 +123,14 @@ export class DynamodbCrudStack extends Stack {
       tracing: Tracing.ACTIVE,
       architecture: Architecture.X86_64,
       environment: {
-        TODO_TABLE_NAME: todoTable.tableName
+        TODO_TABLE_NAME: todoTable.tableName,
+        TODO_TOPIC: this.todoTopic.topicArn
       }
     })
 
     const deleteCfn = deleteTodoFn.node.defaultChild as CfnFunction;
     deleteCfn.overrideLogicalId("DeleteLambda")
+    deleteTodoFn.addToRolePolicy(topicPublishPolicy)
 
     todoTable.grantReadWriteData(deleteTodoFn)
 
@@ -143,27 +163,15 @@ export class DynamodbCrudStack extends Stack {
       deploy: true
     })
 
-
-    createTodoFn.addPermission('PermitAPIGInvocation', {
+    const apiInvokePermission = {
       principal: new ServicePrincipal('apigateway.amazonaws.com'),
       sourceArn: specRestApi.arnForExecuteApi('*')
-    })
-    updateTodoFn.addPermission('PermitAPIGInvocation', {
-      principal: new ServicePrincipal('apigateway.amazonaws.com'),
-      sourceArn: specRestApi.arnForExecuteApi('*')
-    })
-    deleteTodoFn.addPermission('PermitAPIGInvocation', {
-      principal: new ServicePrincipal('apigateway.amazonaws.com'),
-      sourceArn: specRestApi.arnForExecuteApi('*')
-    })
-    getOneTodoFn.addPermission('PermitAPIGInvocation', {
-      principal: new ServicePrincipal('apigateway.amazonaws.com'),
-      sourceArn: specRestApi.arnForExecuteApi('*')
-    })
-    getAllTodoFn.addPermission('PermitAPIGInvocation', {
-      principal: new ServicePrincipal('apigateway.amazonaws.com'),
-      sourceArn: specRestApi.arnForExecuteApi('*')
-    })
+    };
+    createTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
+    updateTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
+    deleteTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
+    getOneTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
+    getAllTodoFn.addPermission('PermitAPIGInvocation', apiInvokePermission)
 
   }
 }

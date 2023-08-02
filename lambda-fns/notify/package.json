@@ -10,9 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.13.0",
-    "@aws-sdk/util-dynamodb": "^3.13.0",
     "@aws-sdk/client-sns": "^3.382.0",
+    "@aws-sdk/client-scheduler": "^3.382.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

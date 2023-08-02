@@ -1,5 +1,5 @@
 {
-  "app": "npx ts-node --prefer-ts-exts bin/dynamodb-crud.ts",
+  "app": "npx ts-node --prefer-ts-exts bin/todo-app.ts",
   "watch": {
     "include": [
       "**"

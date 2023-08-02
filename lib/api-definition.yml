@@ -139,17 +139,18 @@ components:
     TaskModel:
       title: "TaskModel"
       required:
-        - "email"
+        - "phone"
         - "title"
       type: "object"
       properties:
         title:
           type: "string"
-        email:
+        phone:
+          type: "string"
+        owner:
           type: "string"
         duedate:
           type: "string"
-          format: "date"
 x-amazon-apigateway-request-validators:
   Validate body:
     validateRequestParameters: false

@@ -1,17 +1,22 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
-import { DynamoDB, UpdateItemInput } from '@aws-sdk/client-dynamodb'
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
+import {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
+import {DynamoDB, UpdateItemInput} from '@aws-sdk/client-dynamodb'
+import {marshall, unmarshall} from '@aws-sdk/util-dynamodb'
+import {PublishCommand, PublishInput, SNSClient} from "@aws-sdk/client-sns";
 
 interface UpdateTodo {
     id: string
     done: boolean
-    email: string
+    phone: string
     duedate: string
     title: string
     owner: string
 }
 
 const dynamoClient = new DynamoDB({
+    region: 'us-east-1'
+})
+
+const snsClient = new SNSClient({
     region: 'us-east-1'
 })
 
@@ -23,21 +28,23 @@ export async function update(event: APIGatewayProxyEventV2): Promise<APIGatewayP
         return sendFail('invalid request')
     }
 
-    const { done, email, duedate, title, owner } = JSON.parse(event.body) as UpdateTodo
+    let updateTodo = JSON.parse(event.body) as UpdateTodo;
+    updateTodo.id = event.pathParameters!.id
+    const { done, phone, duedate, title, owner } = updateTodo
 
     const todoParams: UpdateItemInput = {
         Key: marshall({ id: event.pathParameters?.id }),
-        UpdateExpression: 'set #done = :done, #email = :email, #duedate = :duedate, #title = :title, #owner_name = :owner_name',
+        UpdateExpression: 'set #done = :done, #phone = :phone, #duedate = :duedate, #title = :title, #owner_name = :owner_name',
         ExpressionAttributeValues: marshall({
             ':done': done,
-            ':email': email,
+            ':phone': phone,
             ':duedate': duedate,
             ':title': title,
             ':owner_name': owner
         }),
         ExpressionAttributeNames: {
             '#done': 'done',
-            '#email': 'email',
+            '#phone': 'phone',
             '#duedate': 'duedate',
             '#title': 'title',
             '#owner_name': 'owner'
@@ -49,6 +56,12 @@ export async function update(event: APIGatewayProxyEventV2): Promise<APIGatewayP
     try {
 
         const { Attributes } = await dynamoClient.updateItem(todoParams)
+
+        await snsClient.send(new PublishCommand({
+            TargetArn: process.env.TODO_TOPIC,
+            Subject: "UPDATE",
+            Message: JSON.stringify(updateTodo)
+        } as PublishInput))
 
         const todo = Attributes ? unmarshall(Attributes) : null
 

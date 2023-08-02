@@ -1,36 +1,37 @@
 
 
 ### Create task
-POST https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task
+POST https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task
 Content-Type: application/json
 
 {
-  "title": "get milk",
+  "title": "Projit finalni pripravu skoleni!!",
   "done": false,
-  "owner": "Pavel",
-  "email": "hanus.j@icloud.com"
+  "owner": "Ales",
+  "phone": "+420732286119",
+  "duedate": "2023-08-02T15:27:00"
 }
 
 ### Create task
-PUT https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60
+PUT https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task/a24b85ff-738f-4426-850c-0cda932ae8b3
 Content-Type: application/json
 
 {
   "title": "get the fucking milk",
   "done": true,
   "owner": "Oldrich",
-  "email": "hanus.j@icloud.com",
+  "phone": "+420725423491",
   "duedate": "2023-08-12"
 }
 
 ### delete task
-DELETE https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task/ef2a5b1d-0e17-4883-9c56-aa0140aeba8e
+DELETE https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task/50507ce3-d65f-4476-87e6-31438c781628
 
 ### get all tasks
-GET https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task
+GET https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task
 
 ### get all tasks by owner
-GET https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
+GET https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
 
 ### get one task
-GET https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60
+GET https://rlxx4p1xn5.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60

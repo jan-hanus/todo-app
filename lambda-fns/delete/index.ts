@@ -1,10 +1,19 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
-import { DynamoDB, DeleteItemInput } from '@aws-sdk/client-dynamodb'
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
+import {APIGatewayProxyEventV2, APIGatewayProxyResultV2} from "aws-lambda";
+import {DeleteItemInput, DynamoDB} from '@aws-sdk/client-dynamodb'
+import {marshall, unmarshall} from '@aws-sdk/util-dynamodb'
+import {PublishCommand, PublishInput, SNSClient} from "@aws-sdk/client-sns";
 
 interface DeleteTodo {
     id: string
 }
+
+const dynamoClient = new DynamoDB({
+    region: 'us-east-1'
+})
+
+const snsClient = new SNSClient({
+    region: 'us-east-1'
+})
 
 export async function deleteTodo(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
 
@@ -18,10 +27,6 @@ export async function deleteTodo(event: APIGatewayProxyEventV2): Promise<APIGate
 
     const { id } = {id: todoId} as DeleteTodo
 
-    const dynamoClient = new DynamoDB({
-        region: 'us-east-1'
-    })
-
     const todoParams: DeleteItemInput = {
         Key: marshall({ id }),
         ReturnValues: 'ALL_OLD',
@@ -31,6 +36,12 @@ export async function deleteTodo(event: APIGatewayProxyEventV2): Promise<APIGate
     try {
 
         const { Attributes } = await dynamoClient.deleteItem(todoParams)
+
+        await snsClient.send(new PublishCommand({
+            TargetArn: process.env.TODO_TOPIC,
+            Subject: "DELETE",
+            Message: JSON.stringify({ id })
+        } as PublishInput))
 
         const todo = Attributes ? unmarshall(Attributes) : null
 
