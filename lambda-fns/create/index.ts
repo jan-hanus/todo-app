@@ -8,6 +8,7 @@ interface TodoInput {
     owner?: string
     title: string
     done: boolean
+    email: string
 }
 
 interface Todo {
@@ -15,9 +16,12 @@ interface Todo {
     owner?: string
     title: string
     done: boolean
+    email: string
 }
 
 export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
+
+    console.debug(`Incoming event: ${event.body}`)
 
     const { body } = event
 
@@ -26,7 +30,7 @@ export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGate
         return sendFail('invalid request')
     }
 
-    const { id, owner, title, done } = JSON.parse(body) as TodoInput
+    const { id, owner, title, done, email } = JSON.parse(body) as TodoInput
 
     const dynamoClient = new DynamoDB({
         region: 'us-east-1'
@@ -34,21 +38,21 @@ export async function createTodo(event: APIGatewayProxyEventV2): Promise<APIGate
 
     const newTodo: Todo = {
         id: id ?? uuid(),
-        owner, title, done
+        owner, title, done, email
     }
+
 
     const todoParams: PutItemInput = {
         Item: marshall(newTodo),
         TableName: process.env.TODO_TABLE_NAME
     }
-
     try {
 
         await dynamoClient.putItem(todoParams)
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ newTodo })
+            body: JSON.stringify(newTodo)
         }
 
     } catch (err) {

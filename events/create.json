@@ -1,3 +1,6 @@
 {
-  "body": "{ \"title\": \"get milk\", \"done\": false }"
+  "title": "get milk",
+  "done": false,
+  "owner": "Honza",
+  "email": "hanus.j@icloud.com"
 }

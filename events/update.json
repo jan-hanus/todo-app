@@ -1,3 +1,6 @@
 {
-  "body": "{ \"id\": \"c67f1017-1a63-4fba-97db-3dd0f1434fc0\", \"done\": true }"
+  "title": "get milk",
+  "done": false,
+  "owner": "Honza",
+  "email": "hanus.j@icloud.com"
 }

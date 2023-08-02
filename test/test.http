@@ -1,0 +1,36 @@
+
+
+### Create task
+POST https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task
+Content-Type: application/json
+
+{
+  "title": "get milk",
+  "done": false,
+  "owner": "Pavel",
+  "email": "hanus.j@icloud.com"
+}
+
+### Create task
+PUT https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60
+Content-Type: application/json
+
+{
+  "title": "get the fucking milk",
+  "done": true,
+  "owner": "Oldrich",
+  "email": "hanus.j@icloud.com",
+  "duedate": "2023-08-12"
+}
+
+### delete task
+DELETE https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task/ef2a5b1d-0e17-4883-9c56-aa0140aeba8e
+
+### get all tasks
+GET https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task
+
+### get all tasks by owner
+GET https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task?owner=Pavel
+
+### get one task
+GET https://0tf55fgm67.execute-api.us-east-1.amazonaws.com/dev/task/f04cded4-266a-435a-a2aa-6cc46fa65a60

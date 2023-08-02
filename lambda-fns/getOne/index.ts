@@ -8,11 +8,12 @@ interface UserInput {
 
 export async function getOne(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
 
-    const { body } = event
+    console.debug(`Incoming event with pathParams: ${event.pathParameters?.id}`)
+    const todoId = event.pathParameters?.id
 
-    if (!body) return sendError('invalid request')
+    if (!todoId) return sendError('invalid request')
 
-    const data = JSON.parse(body) as UserInput
+    const data = {id: todoId} as UserInput
 
     const dynamoClient = new DynamoDB({
         region: 'us-east-1'
@@ -33,7 +34,7 @@ export async function getOne(event: APIGatewayProxyEventV2): Promise<APIGatewayP
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ todo })
+            body: JSON.stringify(todo)
         }
 
     } catch (err) {

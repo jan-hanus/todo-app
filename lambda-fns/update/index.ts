@@ -5,31 +5,45 @@ import { marshall, unmarshall } from '@aws-sdk/util-dynamodb'
 interface UpdateTodo {
     id: string
     done: boolean
+    email: string
+    duedate: string
+    title: string
+    owner: string
 }
+
+const dynamoClient = new DynamoDB({
+    region: 'us-east-1'
+})
 
 export async function update(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
 
-    const { body } = event
-
-    if (!body) {
+    console.debug(`Incoming event with path: ${event.pathParameters?.id}, body: ${event.body}`)
+    if (!event.body || !event.pathParameters?.id) {
 
         return sendFail('invalid request')
     }
 
-    const { id, done } = JSON.parse(body) as UpdateTodo
-
-    const dynamoClient = new DynamoDB({
-        region: 'us-east-1'
-    })
+    const { done, email, duedate, title, owner } = JSON.parse(event.body) as UpdateTodo
 
     const todoParams: UpdateItemInput = {
-        Key: marshall({ id }),
-        UpdateExpression: 'set done = :done',
+        Key: marshall({ id: event.pathParameters?.id }),
+        UpdateExpression: 'set #done = :done, #email = :email, #duedate = :duedate, #title = :title, #owner_name = :owner_name',
         ExpressionAttributeValues: marshall({
-            ':done': done
+            ':done': done,
+            ':email': email,
+            ':duedate': duedate,
+            ':title': title,
+            ':owner_name': owner
         }),
+        ExpressionAttributeNames: {
+            '#done': 'done',
+            '#email': 'email',
+            '#duedate': 'duedate',
+            '#title': 'title',
+            '#owner_name': 'owner'
+        },
         ReturnValues: 'ALL_NEW',
-        TableName: process.env.UPDATE_TABLE_NAME
+        TableName: process.env.TODO_TABLE_NAME
     }
 
     try {
@@ -40,7 +54,7 @@ export async function update(event: APIGatewayProxyEventV2): Promise<APIGatewayP
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ todo })
+            body: JSON.stringify(todo)
         }
 
     } catch (err) {

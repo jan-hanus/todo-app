@@ -8,14 +8,15 @@ interface DeleteTodo {
 
 export async function deleteTodo(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
 
-    const { body } = event
+    console.debug(`Incoming event with pathParams: ${event.pathParameters?.id}`)
+    const todoId = event.pathParameters?.id
 
-    if (!body) {
+    if (!todoId) {
 
         return sendFail('invalid request')
     }
 
-    const { id } = JSON.parse(body) as DeleteTodo
+    const { id } = {id: todoId} as DeleteTodo
 
     const dynamoClient = new DynamoDB({
         region: 'us-east-1'
@@ -35,7 +36,7 @@ export async function deleteTodo(event: APIGatewayProxyEventV2): Promise<APIGate
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ todo })
+            body: JSON.stringify(todo)
         }
 
     } catch (err) {
